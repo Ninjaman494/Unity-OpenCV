@@ -11,4 +11,7 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/NatCam/Core/Examples/SimpleCam/SimpleCam.unity
     guid: bf648912e6e204655b1c129edcdfc0c7
+  - enabled: 0
+    path: Assets/Scenes/NatTutorial.unity
+    guid: 65155993c5ad542439480b59e4f03d25
   m_configObjects: {}
