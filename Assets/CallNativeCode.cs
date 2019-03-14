@@ -4,13 +4,12 @@ using System;
 using System.Collections;
 using System.Runtime.InteropServices;
 
-public class CallNativeCode : MonoBehaviour
-{
+public class CallNativeCode : MonoBehaviour {
     [DllImport("SharedObject1", EntryPoint = "sendRawImageBytes")]
     private static extern int sendRawImageBytes(Color32[] raw, int width, int height);
     [DllImport("SharedObject1", EntryPoint = "getRawImageBytes")]
     private static extern void getRawImageBytes(IntPtr data, int width, int height);
-    private GameObject dialog = null;
+ 
     private WebCamTexture webcam;
 
     private Texture2D tex;
@@ -19,11 +18,8 @@ public class CallNativeCode : MonoBehaviour
     private GCHandle pixelHandle;
     private IntPtr pixelPtr;
 
-    private bool calledInit = false;
 
-
-    void Start()
-    {
+    void Start() {
         var devices = WebCamTexture.devices;
         webcam = new WebCamTexture(devices[0].name);
         webcam.Play();
@@ -32,53 +28,32 @@ public class CallNativeCode : MonoBehaviour
         gameObject.GetComponent<Renderer>().material.mainTexture = tex;
     }
 
-    void Update()
-    {
-        if(calledInit)
-        {
-            Debug.Log("called");
-            MatToTexture2D();
-        }
-        else
-        {
-            Debug.Log("not called");
-        }
+    void Update() {
+        Debug.Log("called");
+        MatToTexture2D();
     }
 
-    void OnGUI ()
-    {
+    void OnGUI () {
 #if PLATFORM_ANDROID
-        if (!Permission.HasUserAuthorizedPermission(Permission.Camera))
-        {
+        if (!Permission.HasUserAuthorizedPermission(Permission.Camera)) {
             GUI.Label(new Rect(15, 125, 450, 100), "Didn't get camera permission");
-        }
-        else
-        {
-            //Color32[] data = new Color32[webcamTexture.width * webcamTexture.height];
+        } else {
             Color32[] rawImg = webcam.GetPixels32();
-            //System.Array.Reverse(rawImg);
-
-            // This Line should display "Foopluginmethod: 10"
             GUI.Label(new Rect(15, 125, 450, 100), "videoStream: " + sendRawImageBytes(rawImg,webcam.width,webcam.height));
-            calledInit = true;
         }
 #endif
     }
 
-    void InitTexture()
-    {
+    void InitTexture() {
         tex = new Texture2D(512, 512, TextureFormat.RGBA32, false);
         pixel32 = tex.GetPixels32();
-        //Pin pixel32 array
-        pixelHandle = GCHandle.Alloc(pixel32, GCHandleType.Pinned);
-        //Get the pinned address
-        pixelPtr = pixelHandle.AddrOfPinnedObject();
+        pixelHandle = GCHandle.Alloc(pixel32, GCHandleType.Pinned); // Pin pixel32 array
+        pixelPtr = pixelHandle.AddrOfPinnedObject(); // Get the pinned address
     }
 
-    void MatToTexture2D()
-    {
-        Debug.Log("Calling c++");
+    void MatToTexture2D() {
         //Convert Mat to Texture2D
+        Debug.Log("Calling c++");
         getRawImageBytes(pixelPtr, tex.width, tex.height);
         Debug.Log("Called c++");
 
@@ -88,8 +63,7 @@ public class CallNativeCode : MonoBehaviour
         tex.Apply();
     }
 
-    void OnApplicationQuit()
-    {
+    void OnApplicationQuit() {
         pixelHandle.Free();
     }
 }
