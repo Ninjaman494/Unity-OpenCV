@@ -9,6 +9,12 @@ public class CallNativeCode : MonoBehaviour {
     private static extern int sendRawImageBytes(Color32[] raw, int width, int height);
     [DllImport("SharedObject1", EntryPoint = "getRawImageBytes")]
     private static extern void getRawImageBytes(IntPtr data, int width, int height);
+    [DllImport("SharedObject1", EntryPoint = "getSentFrame")]
+    private static extern void getSentFrame(IntPtr data, int width, int height);
+    [DllImport("SharedObject1", EntryPoint = "doTracking")]
+    private static extern int doTracking();
+     [DllImport("SharedObject1", EntryPoint = "setLines")]
+    private static extern int setLines();
  
     private WebCamTexture webcam;
 
@@ -26,10 +32,22 @@ public class CallNativeCode : MonoBehaviour {
 
         InitTexture();
         gameObject.GetComponent<Renderer>().material.mainTexture = tex;
+
+        sendRawImageBytes(webcam.GetPixels32(),webcam.width,webcam.height);
+        if(setLines() == -1){
+            Debug.Log("Setting lines failed");
+        } else {
+            Debug.Log("Set lines !");
+        }
+        if( doTracking() != 0){
+            Debug.Log("Something went wrong with Tracking");
+        }
     }
 
     void Update() {
-        Debug.Log("called");
+        //Debug.Log("Sending raw image");
+        //sendRawImageBytes(webcam.GetPixels32(),webcam.width,webcam.height);
+        Debug.Log("Converting Mat to Texture2D");
         MatToTexture2D();
     }
 
@@ -38,8 +56,9 @@ public class CallNativeCode : MonoBehaviour {
         if (!Permission.HasUserAuthorizedPermission(Permission.Camera)) {
             GUI.Label(new Rect(15, 125, 450, 100), "Didn't get camera permission");
         } else {
-            Color32[] rawImg = webcam.GetPixels32();
-            GUI.Label(new Rect(15, 125, 450, 100), "videoStream: " + sendRawImageBytes(rawImg,webcam.width,webcam.height));
+            //Debug.Log("On GUI called");
+            //Color32[] rawImg = webcam.GetPixels32();
+            //GUI.Label(new Rect(15, 125, 450, 100), "videoStream: " + sendRawImageBytes(rawImg,webcam.width,webcam.height));
         }
 #endif
     }
@@ -54,7 +73,7 @@ public class CallNativeCode : MonoBehaviour {
     void MatToTexture2D() {
         //Convert Mat to Texture2D
         Debug.Log("Calling c++");
-        getRawImageBytes(pixelPtr, tex.width, tex.height);
+        getSentFrame(pixelPtr, tex.width, tex.height);
         Debug.Log("Called c++");
 
         //Update the Texture2D with array updated in C++
